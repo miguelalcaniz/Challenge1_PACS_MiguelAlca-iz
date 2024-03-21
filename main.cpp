@@ -18,13 +18,10 @@ int main(int argc, char **argv)
   std::string dx0_funString = data.value("dx[0]fun","");
   std::string dx1_funString = data.value("dx[1]fun","");
   double alpha = data.value("alpha", 0.2);
-  const unsigned int max_it =  data.value("max_it",100);
-  const double tol_fun = data.value("tol_res", 1e-7);
-  const double tol_x = data.value("tol_x", 1e-7);
-
-  //PRINTING DATA TO PROVE IT WORKS
-  std::cout<< "PRINTING THE DATA TAKEN WITH JSON: " << max_it << ' ' << tol_fun << ' ' << tol_x << std::endl;
-  std::cout<< funString << std::endl << dx0_funString << std::endl<< std::endl;
+  const unsigned int max_it =  data.value("max_it", 50);
+  const double tol_fun = data.value("tol_res", 1e-6);
+  const double tol_x = data.value("tol_x", 1e-6);
+  std::array<double,2> x0{{0,0}}; 
 
   //PASSING FROM STRING TO FUNCTION WITH MUPARSERX
   using namespace MuParserInterface;
@@ -34,26 +31,34 @@ int main(int argc, char **argv)
   dfx0.set_expression(dx0_funString);
   muParserXInterface<2> dfx1; 
   dfx1.set_expression(dx1_funString);
-
-  //TESTING IT WORKS
-  std::cout << "TESTING THE MUPARSERX: " << dfx1({1,1}) << std::endl<< std::endl;
-
-  //JOINING THE TWO FUNCTIONS IN ONE ONLY
-  std::vector< std::function<double(std::array<double,2>)>> df(2);
-  df[0] = dfx0; df[1] = dfx1;
-  std::cout<< "TESTING THE JOIN OF THE FUNCTIONS: " << df[0]({1,1}) << std::endl << std::endl;
-
   
-  // initialize minimizer
-  
-  GradientMethod minimizer(f, dfx0, dfx1, alpha, max_it, tol_x, tol_fun);
-  std::array<double,2> x0{{0,0}};
-  minimizer.minimize(x0);
-  std::array<double,2> minimizer.get_result();
+  // GRADIENT METHOD (Exponential decay)
+  std::cout<< "Calculating the minimum of the function with the gradient method (with exponential decay)" << std::endl;
+  GradientMethod minimizer(f, dfx0, dfx1, alpha, max_it, tol_x, tol_fun, alpha_strategies::Exponencial_decay);
+  minimizer.minimize(x0);   
+  std::array<double,2> out = minimizer.get_result();
+  std::cout<< "The minimum is found in the point: " << out[0] << ", " << out[1] << '.' << std::endl;
+  std::cout<< "The value of the minimum is: " << f(out) << '.' << std::endl;
+  std::cout<< "Calculated it in " << minimizer.get_iter() << " iterations." << std::endl << std::endl;
 
-  // output the results
-  //std::cout << "x =    " << solver.get_result() << std::endl;
-  //std::cout << "r =    " << solver.get_residual() << std::endl;
-  //std::cout << "iter = " << solver.get_iter() << std::endl;
+  // GRADIENT METHOD (Inverse decay)
+  std::cout<< "Calculating the minimum of the function with the gradient method (with inverse decay)" << std::endl;
+  GradientMethod minimizer2(f, dfx0, dfx1, alpha, max_it, tol_x, tol_fun, alpha_strategies::Inverse_decay);
+  minimizer2.minimize(x0);   
+  std::array<double,2> out2 = minimizer2.get_result();
+  std::cout<< "The minimum is found in the point: " << out2[0] << ", " << out2[1] << '.' << std::endl;
+  std::cout<< "The value of the minimum is: " << f(out2) << '.' << std::endl;
+  std::cout<< "Calculated it in " << minimizer2.get_iter() << " iterations." << std::endl << std::endl;
+
+  // GRADIENT METHOD (Aproximate line serach)
+  std::cout<< "Calculating the minimum of the function with the gradient method (with aproximate_line_search)" << std::endl;
+  GradientMethod minimizer3(f, dfx0, dfx1, alpha, max_it, tol_x, tol_fun, alpha_strategies::Aproximate_line_search);
+  minimizer3.minimize(x0);   
+  std::array<double,2> out3 = minimizer3.get_result();
+  std::cout<< "The minimum is found in the point: " << out3[0] << ", " << out3[1] << '.' << std::endl;
+  std::cout<< "The value of the minimum is: " << f(out3) << '.' << std::endl;
+  std::cout<< "Calculated it in " << minimizer3.get_iter() << " iterations." << std::endl << std::endl;
+
+
 
 }

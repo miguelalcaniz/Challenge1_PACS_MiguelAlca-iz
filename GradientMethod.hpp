@@ -2,10 +2,18 @@
 #define GRADIENTMETHOD
 
 #include <cmath>
+#include <iostream>
 #include <functional>
 #include <iostream>
 #include <limits>
 #include "muParserXInterface.hpp" 
+
+enum class alpha_strategies
+{
+  Exponencial_decay,
+  Inverse_decay,
+  Aproximate_line_search
+};
 
 class GradientMethod
 {
@@ -16,7 +24,8 @@ public:
                const double alpha_ = 0.2,
                const unsigned int n_max_it_ = 100,
                const double tol_x_ = std::numeric_limits<double>::epsilon() * 1000.0,
-               const double tol_fun_   = std::numeric_limits<double>::epsilon() * 1000.0)
+               const double tol_fun_   = std::numeric_limits<double>::epsilon() * 1000.0,
+               const alpha_strategies strategy_ = alpha_strategies::Exponencial_decay)
     : m_fun(fun_)
     , m_d0fun(d0fun_)
     , m_d1fun(d1fun_)
@@ -27,26 +36,37 @@ public:
     , m_x()
     , m_df_dx()
     , m_iter(0)
+    , m_strategy(strategy_)
   {}
 
   void minimize(const std::array<double,2> &x0)
   {
-    m_old_x = x0;
     int N = x0.size();
-    std::array<double,2> step;
-
-    for (size_t m_iter = 0; m_iter < N; ++m_iter)
+    m_x = x0;
+    double const alpha0 = m_alpha;
+    while(m_iter < m_n_max_it)
       {
-        step[0] = m_alpha* m_d0fun(m_old_x);
-        step[1] = m_alpha* m_d1fun(m_old_x);
-        std::transform(m_old_x.begin(), m_old_x.end(), step.begin(), m_x.begin(),
-                    [=](double x, double y){ return x - y ; });
-        m_res = 0;
-        for(size_t i = 0; i < x0.size(); ++i) m_res += (m_x[i]-m_old_x[i])*(m_x[i]-m_old_x[i]);
-        if(m_res < m_tol_x)
-            break;
-        if(abs(m_fun(m_old_x)-m_fun(m_x)) < m_tol_fun)
-            break;
+        ++m_iter;
+        m_old_x = m_x;
+        if(m_strategy == alpha_strategies::Exponencial_decay) m_alpha = alpha0*pow(exp(-0.2),m_iter);
+        if(m_strategy == alpha_strategies::Inverse_decay) m_alpha = alpha0/(1+0.2*m_iter);
+        if(m_strategy == alpha_strategies::Aproximate_line_search){ 
+          //we do alpha divided by 2 until Armijo rule is satisfyed
+          m_alpha = alpha0;
+          double const Armijo = 0.4 *alpha0*(m_d0fun(m_old_x)*m_d0fun(m_old_x)+m_d1fun(m_old_x)*m_d1fun(m_old_x));
+          bool anti_loops = false;
+          while(m_fun(m_old_x)-m_fun({m_old_x[0]-m_alpha*m_d0fun(m_old_x),m_old_x[1]-m_alpha*m_d1fun(m_old_x)}) < Armijo){
+            m_alpha /= 2;
+            if(m_alpha < 1e-5){ anti_loops = true; break;}
+          } 
+          if(anti_loops) break;
+        }
+        m_x[0] -= m_alpha*m_d0fun(m_old_x);
+        m_x[1] -= m_alpha*m_d1fun(m_old_x);
+
+        m_res = (m_x[0]-m_old_x[0])*(m_x[0]-m_old_x[0])+(m_x[1]-m_old_x[1])*(m_x[1]-m_old_x[1]);
+        if(m_res < m_tol_x) break;
+        if(abs(m_fun(m_old_x)-m_fun(m_x)) < m_tol_fun) break;     
       };
   }
 
@@ -99,6 +119,8 @@ private:
   unsigned int m_iter;
 
   double m_res;
+
+  const alpha_strategies m_strategy;
 };
 
 #endif
