@@ -19,7 +19,7 @@ int main(int argc, char **argv)
   std::string dx1_funString = data.value("dx[1]fun","");
   double alpha = data.value("alpha", 0.2);
   const unsigned int max_it =  data.value("max_it", 50);
-  const double tol_fun = data.value("tol_res", 1e-6);
+  const double tol_fun = data.value("tol_fun", 1e-6);
   const double tol_x = data.value("tol_x", 1e-6);
   std::array<double,2> x0{{0,0}}; 
 
@@ -58,7 +58,5 @@ int main(int argc, char **argv)
   std::cout<< "The minimum is found in the point: " << out3[0] << ", " << out3[1] << '.' << std::endl;
   std::cout<< "The value of the minimum is: " << f(out3) << '.' << std::endl;
   std::cout<< "Calculated it in " << minimizer3.get_iter() << " iterations." << std::endl << std::endl;
-
-
 
 }

@@ -41,32 +41,38 @@ public:
 
   void minimize(const std::array<double,2> &x0)
   {
-    int N = x0.size();
     m_x = x0;
     double const alpha0 = m_alpha;
     while(m_iter < m_n_max_it)
       {
         ++m_iter;
         m_old_x = m_x;
+
         if(m_strategy == alpha_strategies::Exponencial_decay) m_alpha = alpha0*pow(exp(-0.2),m_iter);
+
         if(m_strategy == alpha_strategies::Inverse_decay) m_alpha = alpha0/(1+0.2*m_iter);
+
         if(m_strategy == alpha_strategies::Aproximate_line_search){ 
           //we do alpha divided by 2 until Armijo rule is satisfyed
           m_alpha = alpha0;
-          double const Armijo = 0.4 *alpha0*(m_d0fun(m_old_x)*m_d0fun(m_old_x)+m_d1fun(m_old_x)*m_d1fun(m_old_x));
+          double const Armijo = 0.2 *alpha0*(m_d0fun(m_old_x)*m_d0fun(m_old_x)+m_d1fun(m_old_x)*m_d1fun(m_old_x));
           bool anti_loops = false;
           while(m_fun(m_old_x)-m_fun({m_old_x[0]-m_alpha*m_d0fun(m_old_x),m_old_x[1]-m_alpha*m_d1fun(m_old_x)}) < Armijo){
             m_alpha /= 2;
-            if(m_alpha < 1e-5){ anti_loops = true; break;}
+            if(m_alpha < 1e-6){ anti_loops = true; break;}
           } 
           if(anti_loops) break;
         }
+        //We set x_{k+1} at m_x
         m_x[0] -= m_alpha*m_d0fun(m_old_x);
         m_x[1] -= m_alpha*m_d1fun(m_old_x);
 
+        //Control of the step lenght
         m_res = (m_x[0]-m_old_x[0])*(m_x[0]-m_old_x[0])+(m_x[1]-m_old_x[1])*(m_x[1]-m_old_x[1]);
         if(m_res < m_tol_x) break;
-        if(abs(m_fun(m_old_x)-m_fun(m_x)) < m_tol_fun) break;     
+
+        //Control of the residual (I didn't put it because it works worst)
+        //if(abs(m_fun(m_old_x)-m_fun(m_x)) < m_tol_fun){ std::cout<< "lo sabia" << std::endl; break;}     
       };
   }
 
