@@ -34,7 +34,6 @@ public:
     , m_tol_fun(tol_fun_)
     , m_tol_x(tol_x_)
     , m_x()
-    , m_df_dx()
     , m_iter(0)
     , m_strategy(strategy_)
   {}
@@ -72,7 +71,37 @@ public:
         if(m_res < m_tol_x) break;
 
         //Control of the residual (I didn't put it because it works worst)
-        //if(abs(m_fun(m_old_x)-m_fun(m_x)) < m_tol_fun){ std::cout<< "lo sabia" << std::endl; break;}     
+        //if(abs(m_fun(m_old_x)-m_fun(m_x)) < m_tol_fun) break;     
+      };
+  }
+
+  void minimize_with_momentum(const std::array<double,2> &x0)
+  {
+    m_x = x0;
+    double const alpha0 = m_alpha;
+    m_alpha = 0;
+
+    while(m_iter < m_n_max_it)
+      {
+        ++m_iter;
+        m_old_x = m_x;
+        m_x[0] -= 0.8*m_alpha*m_d0fun(m_old_x); //momentum
+        m_x[1] -= 0.8*m_alpha*m_d1fun(m_old_x); //momentum
+
+        if(m_strategy == alpha_strategies::Exponencial_decay) m_alpha = alpha0*pow(exp(-0.2),m_iter);
+
+        if(m_strategy == alpha_strategies::Inverse_decay) m_alpha = alpha0/(1+0.2*m_iter);
+
+        //We set x_{k+1} at m_x
+        m_x[0] -= m_alpha*m_d0fun(m_old_x);
+        m_x[1] -= m_alpha*m_d1fun(m_old_x);
+
+        //Control of the step length
+        m_res = (m_x[0]-m_old_x[0])*(m_x[0]-m_old_x[0])+(m_x[1]-m_old_x[1])*(m_x[1]-m_old_x[1]);
+        if(m_res < m_tol_x) break;
+
+        //Control of the residual (I didn't put it because it works worst)
+        //if(abs(m_fun(m_old_x)-m_fun(m_x)) < m_tol_fun) break;     
       };
   }
 
@@ -104,28 +133,29 @@ private:
   // number of maximum iteration
   const unsigned int m_n_max_it;
 
-  // tolerance on the residual
+  // tolerance on the increment of images
   const double       m_tol_fun;
 
   // tolerance on the increment
   const double       m_tol_x;
 
+  // step lenght
   double       m_alpha;
 
   // Variables employed by the solver
   // guess on the solution
   std::array<double,2> m_x;
 
+  // old iteration value
   std::array<double,2> m_old_x;
-
-  // value of the derivative at point x
-  std::array<double,2> m_df_dx;
 
   // number of iterations
   unsigned int m_iter;
 
+  // residual 
   double m_res;
 
+  //type of method
   const alpha_strategies m_strategy;
 };
 

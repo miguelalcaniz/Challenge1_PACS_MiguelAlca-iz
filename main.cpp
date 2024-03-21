@@ -59,4 +59,22 @@ int main(int argc, char **argv)
   std::cout<< "The value of the minimum is: " << f(out3) << '.' << std::endl;
   std::cout<< "Calculated it in " << minimizer3.get_iter() << " iterations." << std::endl << std::endl;
 
+  // GRADIENT METHOD (Exponential decay with momentum)
+  std::cout<< "Calculating the minimum of the function with the gradient method (with exponential decay)" << std::endl;
+  GradientMethod minimizer4(f, dfx0, dfx1, alpha, max_it, tol_x, tol_fun, alpha_strategies::Exponencial_decay);
+  minimizer4.minimize_with_momentum(x0);   
+  std::array<double,2> out4 = minimizer4.get_result();
+  std::cout<< "The minimum is found in the point: " << out4[0] << ", " << out4[1] << '.' << std::endl;
+  std::cout<< "The value of the minimum is: " << f(out4) << '.' << std::endl;
+  std::cout<< "Calculated it in " << minimizer4.get_iter() << " iterations." << std::endl << std::endl;
+
+  // GRADIENT METHOD (Inverse decay with momentum)
+  std::cout<< "Calculating the minimum of the function with the gradient method (with inverse decay)" << std::endl;
+  GradientMethod minimizer5(f, dfx0, dfx1, alpha, max_it, tol_x, tol_fun, alpha_strategies::Inverse_decay);
+  minimizer5.minimize_with_momentum(x0);   
+  std::array<double,2> out5 = minimizer2.get_result();
+  std::cout<< "The minimum is found in the point: " << out5[0] << ", " << out5[1] << '.' << std::endl;
+  std::cout<< "The value of the minimum is: " << f(out5) << '.' << std::endl;
+  std::cout<< "Calculated it in " << minimizer5.get_iter() << " iterations." << std::endl << std::endl;
+
 }
