@@ -1,0 +1,9 @@
+README should be more detailed.
+
+You could have collected the optimization parameters in a struct.
+You could try to use templates to choose the different strategies for the computation of the learning rate and different classes for the minimization methods.
+Since you already give the user the possibility to set parameters runtime, you could also let them choose the minimization method: it would make the code more flexible.
+
+Give more meaningful names to variables: avoid names as minimizer1,2,3 and prefer for instance gradientDescent, heavyBall, nesterov.
+
+The results are correct and the output is clear.
